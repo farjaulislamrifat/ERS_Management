@@ -1,0 +1,302 @@
+﻿@model ERS_Management.Models.FaultEntry
+@{
+    ViewData["Title"] = "Create Fault Entry";
+}
+
+<div class="container-fluid py-4 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <!-- ==================== CARD ==================== -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-primary text-white px-4 py-3">
+                    <h3 class="mb-0 fw-bold d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Report New Fault
+                    </h3>
+                    <small class="opacity-80">Fill all required fields to log the fault</small>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Create" id="createFaultForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-4" role="alert"></div>
+
+                        <!-- ==================== FAULT TIME ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="FaultTime" class="form-label fw-semibold">Fault Time <span class="text-danger">*</span></label>
+                            <input asp-for="FaultTime" class="form-control form-control-lg flatpickr-datetime"
+                                   placeholder="Select date & time" />
+                            <span asp-validation-for="FaultTime" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== REPORTED BY ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="ReportedBy" class="form-label fw-semibold">Reported By <span class="text-danger">*</span></label>
+                            <input asp-for="ReportedBy" class="form-control form-control-lg"
+                                   placeholder="e.g. John Doe" />
+                            <span asp-validation-for="ReportedBy" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== SITE (Editable Dropdown) ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Site" class="form-label fw-semibold">Site <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg">
+                                <select asp-for="Site" id="dropdown-Site"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.Sites"
+                                        data-placeholder="Select site...">
+                                    <option value="">-- Select site --</option>
+                                </select>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                            id="siteDropdown" data-bs-toggle="dropdown">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" class="form-control form-control-sm new-input"style="width:max-content"
+                                                       placeholder="New site..." autocomplete="off" />
+                                                <button type="button" class="btn btn-success btn-sm save-btn" data-field="Site">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <input type="hidden" name="SiteId_New" />
+                            <span asp-validation-for="Site" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== LOCATION (Editable Dropdown) ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Location" class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg">
+                                <select asp-for="Location" id="dropdown-Location"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.Locations"
+                                        data-placeholder="Select location...">
+                                    <option value="">-- Select location --</option>
+                                </select>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                            id="locationDropdown" data-bs-toggle="dropdown">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" class="form-control form-control-sm new-input" style="width:max-content"
+                                                       placeholder="New location..." autocomplete="off" />
+                                                <button type="button" class="btn btn-success btn-sm save-btn" data-field="Location">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <input type="hidden" name="LocationId_New" />
+                            <span asp-validation-for="Location" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== DESCRIPTION ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Description" class="form-label fw-semibold">Fault Description <span class="text-danger">*</span></label>
+                            <textarea asp-for="Description" class="form-control" rows="4"
+                                      placeholder="Describe the fault in detail..."></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== CATEGORY (Editable Dropdown) ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Category" class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-lg">
+                                <select asp-for="Category" id="dropdown-Category"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.Categories"
+                                        data-placeholder="Select category...">
+                                    <option value="">-- Select category --</option>
+                                </select>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                                            id="categoryDropdown" data-bs-toggle="dropdown">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" class="form-control form-control-sm new-input" style="width:max-content"
+                                                       placeholder="New category..." autocomplete="off" />
+                                                <button type="button" class="btn btn-success btn-sm save-btn" data-field="Category">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <input type="hidden" name="CategoryId_New" />
+                            <span asp-validation-for="Category" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== RESOLUTION SECTION (Collapsible) ==================== -->
+                        <div class="border rounded-3 p-4 mb-4 bg-light">
+                            <h5 class="fw-bold text-primary mb-3">
+                                <i class="bi bi-tools me-2"></i> Resolution Details
+                            </h5>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label asp-for="ResolvedBy" class="form-label fw-semibold">Resolved By</label>
+                                    <input asp-for="ResolvedBy" class="form-control form-control-lg"
+                                           placeholder="Technician name" />
+                                    <span asp-validation-for="ResolvedBy" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="ResolvedTime" class="form-label fw-semibold">Resolved Time</label>
+                                    <input asp-for="ResolvedTime" class="form-control form-control-lg flatpickr-datetime"
+                                           placeholder="Select date & time" />
+                                    <span asp-validation-for="ResolvedTime" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="mt-3">
+                                <label asp-for="Resolution" class="form-label fw-semibold">Resolution Steps</label>
+                                <textarea asp-for="Resolution" class="form-control" rows="3"
+                                          placeholder="What was done to fix the fault?"></textarea>
+                                <span asp-validation-for="Resolution" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mt-3">
+                                <label asp-for="Duration" class="form-label fw-semibold">Duration (auto-calculated)</label>
+                                <input asp-for="Duration" class="form-control form-control-lg bg-white" readonly />
+                            </div>
+                        </div>
+
+                        <!-- ==================== REMARKS ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Remarks" class="form-label fw-semibold">Additional Remarks (optional)</label>
+                            <textarea asp-for="Remarks" class="form-control" rows="3"
+                                      placeholder="Any extra notes..."></textarea>
+                            <span asp-validation-for="Remarks" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== READ-ONLY INFO ==================== -->
+                        <div class="row g-3 mb-4 text-muted small">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Logged By</label>
+                                <input value="@User.Identity?.Name" class="form-control bg-light"  />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Logged At</label>
+                                <input value="@DateTime.Now:yyyy-MM-dd HH:mm" class="form-control bg-light" disabled />
+                            </div>
+                        </div>
+
+                        <!-- ==================== SUBMIT BUTTONS ==================== -->
+                        <div class="d-flex flex-column flex-sm-row gap-3 mt-5">
+                            <button type="submit" class="btn btn-danger btn-lg px-5 fw-semibold">
+                                <i class="bi bi-save me-2"></i> Log Fault
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-5">
+                                <i class="bi bi-arrow-left me-2"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <!-- Flatpickr for DateTime -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize Select2
+            $('.select2-editable').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: $(this).data('placeholder')
+            });
+
+            // Flatpickr for datetime
+            $('.flatpickr-datetime').flatpickr({
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                time_24hr: true
+            });
+
+            // Auto-calculate Duration when both times are set
+            function calculateDuration() {
+                const faultTime = flatpickr.parseDate($('#FaultTime').val(), "Y-m-d H:i");
+                const resolvedTime = flatpickr.parseDate($('#ResolvedTime').val(), "Y-m-d H:i");
+
+                if (faultTime && resolvedTime && resolvedTime > faultTime) {
+                    const diffMs = resolvedTime - faultTime;
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    $('#Duration').val(`${hours}h ${minutes}m`);
+                } else {
+                    $('#Duration').val('');
+                }
+            }
+
+            $('#FaultTime, #ResolvedTime').on('change', calculateDuration);
+
+            // Add New Dropdown Logic
+            $('.save-btn').on('click', function () {
+                const field = $(this).data('field');
+                const input = $(this).closest('li').find('.new-input');
+                const value = input.val().trim();
+                const errorMsg = $(this).closest('li').find('.error-msg');
+
+                if (!value) {
+                    errorMsg.text('Please enter a value.');
+                    return;
+                }
+
+                errorMsg.text('');
+
+                // Simulate AJAX save (replace with actual endpoint)
+                    const $select = $('#dropdown-' + field + '');
+    
+        const newOption = new Option(value, value, true, true);
+        $select.append(newOption).trigger('change'); // For select2 support
+
+            });
+
+            $('.cancel-btn').on('click', function () {
+                $(this).closest('.dropdown-menu').find('.new-input').val('');
+                $(this).closest('.dropdown-menu').find('.error-msg').text('');
+            });
+        });
+    </script>
+}

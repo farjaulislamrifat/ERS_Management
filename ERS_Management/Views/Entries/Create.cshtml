@@ -1,0 +1,378 @@
+﻿@using Microsoft.AspNetCore.Html
+@model ERS_Management.Models.Entries
+
+@{
+    ViewData["Title"] = "Create Entry";
+}
+<div class="container-fluid py-4 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+
+            <!-- ==================== CARD ==================== -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="card-header bg-gradient-primary text-white px-4 py-3">
+                    <h3 class="mb-0 fw-bold d-flex align-items-center">
+                        <i class="bi bi-plus-circle me-2"></i> Create New Entry
+                    </h3>
+                    <small class="opacity-80">Fill the form and click **Create**</small>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+
+                    <form asp-action="Create" id="createEntryForm">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger rounded-3 mb-4" role="alert"></div>
+
+                        <!-- ==================== AREA ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Area" class="form-label fw-semibold">Area</label>
+
+                            <div class="input-group input-group-lg">
+                                <select asp-for="Area"  id="dropdown-Area"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.Areas"
+                                        data-placeholder="Select area...">
+                                    <option value="">-- Select area --</option>
+                                </select>
+
+                                <!-- Dropdown button that lives inside the input-group -->
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle"
+                                            type="button"
+                                            id="areaDropdown"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3" aria-labelledby="areaDropdown">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" style="width:max-content"
+                                                       class="form-control form-control-sm new-input"
+                                                       placeholder="New area..."
+                                                       autocomplete="off" />
+                                                <button type="button"
+                                                        class="btn btn-success btn-sm save-btn"
+                                                        data-field="Area">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="AreaId_New" />
+                            <span asp-validation-for="Area" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== LOCATION ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Location" class="form-label fw-semibold">Location</label>
+
+                            <div class="input-group input-group-lg">
+                                <select asp-for="Location" id="dropdown-Location"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.Locations"
+                                        data-placeholder="Select location...">
+                                    <option value="">-- Select location --</option>
+                                </select>
+
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle"
+                                            type="button"
+                                            id="locationDropdown"
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" style="width:max-content"
+                                                       class="form-control form-control-sm new-input"
+                                                       placeholder="New location..." />
+                                                <button type="button"
+                                                        class="btn btn-success btn-sm save-btn"
+                                                        data-field="Location">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="LocationId_New" />
+                            <span asp-validation-for="Location" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== BRAND ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Brand" class="form-label fw-semibold">Brand</label>
+
+                            <div class="input-group input-group-lg">
+                                <select asp-for="Brand" id="dropdown-Brand"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.Brands"
+                                        data-placeholder="Select brand...">
+                                    <option value="">-- Select brand --</option>
+                                </select>
+
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle"
+                                            type="button"
+                                            id="brandDropdown"
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" style="width:max-content"
+                                                       class="form-control form-control-sm new-input"
+                                                       placeholder="New brand..." />
+                                                <button type="button"
+                                                        class="btn btn-success btn-sm save-btn"
+                                                        data-field="Brand">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="BrandId_New" />
+                            <span asp-validation-for="Brand" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== MODEL ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Model" class="form-label fw-semibold">Model</label>
+
+                            <div class="input-group input-group-lg">
+                                <select asp-for="Model" id="dropdown-Model"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.Models"
+                                        data-placeholder="Select model...">
+                                    <option value="">-- Select model --</option>
+                                </select>
+
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle"
+                                            type="button"
+                                            id="modelDropdown"
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" style="width:max-content"
+                                                       class="form-control form-control-sm new-input"
+                                                       placeholder="New model..." />
+                                                <button type="button"
+                                                        class="btn btn-success btn-sm save-btn"
+                                                        data-field="Model">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="ModelId_New" />
+                            <span asp-validation-for="Model" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== USER PURPOSE ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="UserPurpose" class="form-label fw-semibold">User Purpose</label>
+
+                            <div class="input-group input-group-lg">
+                                <select asp-for="UserPurpose" id="dropdown-UserPurpose"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.Purposes"
+                                        data-placeholder="Select purpose...">
+                                    <option value="">-- Select purpose --</option>
+                                </select>
+
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle"
+                                            type="button"
+                                            id="purposeDropdown"
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" style="width:max-content"
+                                                       class="form-control form-control-sm new-input"
+                                                       placeholder="New purpose..." />
+                                                <button type="button"
+                                                        class="btn btn-success btn-sm save-btn"
+                                                        data-field="UserPurpose">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="UserPurposeId_New" />
+                            <span asp-validation-for="UserPurpose" class="text-danger small"></span>
+                        </div>
+
+
+
+
+
+
+
+                        <div class="mb-4">
+                            <label asp-for="ItemType" class="form-label fw-semibold">Item Type</label>
+
+                            <div class="input-group input-group-lg">
+                                <select asp-for="ItemType" id="dropdown-ItemType"
+                                        class="form-select select2-editable"
+                                        asp-items="ViewBag.ItemTypes"
+                                        data-placeholder="Select ItemType...">
+                                    <option value="">-- Select Itemtype --</option>
+                                </select>
+
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle"
+                                            type="button"
+                                            id="itemtypeDropdown"
+                                            data-bs-toggle="dropdown">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end p-3">
+                                        <li>
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <input type="text" style="width:max-content"
+                                                       class="form-control form-control-sm new-input"
+                                                       placeholder="New ItemType..." />
+                                                <button type="button"
+                                                        class="btn btn-success btn-sm save-btn"
+                                                        data-field="ItemType">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-outline-secondary btn-sm cancel-btn">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                            <div class="text-danger small mt-1 error-msg"></div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="ItemTypeId_New" />
+                            <span asp-validation-for="ItemType" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== QUANTITY ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Quantity" class="form-label fw-semibold">Quantity</label>
+                            <input asp-for="Quantity" class="form-control form-control-lg" type="number" min="1" placeholder="e.g. 5" />
+                            <span asp-validation-for="Quantity" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== ASSET / SERIAL ==================== -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="AssetNo" class="form-label fw-semibold">Asset No</label>
+                                <input asp-for="AssetNo" class="form-control form-control-lg" placeholder="ASSET-00123" />
+                                <span asp-validation-for="AssetNo" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="SerialNo" class="form-label fw-semibold">Serial No</label>
+                                <input asp-for="SerialNo" class="form-control form-control-lg" placeholder="SN987654321" />
+                                <span asp-validation-for="SerialNo" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <!-- ==================== REMARKS ==================== -->
+                        <div class="mb-4">
+                            <label asp-for="Remarks" class="form-label fw-semibold">Remarks (optional)</label>
+                            <textarea asp-for="Remarks" class="form-control" rows="3" placeholder="Additional notes…"></textarea>
+                            <span asp-validation-for="Remarks" class="text-danger small"></span>
+                        </div>
+
+                        <!-- ==================== READ‑ONLY INFO ==================== -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Username</label>
+                                <input asp-for="Username" value="@User.Identity.Name" class="form-control bg-light"  />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Created At</label>
+                                <input class="form-control bg-light" type="text"
+                                       value="@DateTime.Now:yyyy-MM-dd HH:mm" disabled />
+                            </div>
+                        </div>
+
+                        <!-- ==================== SUBMIT BUTTONS ==================== -->
+                        <div class="d-flex flex-column flex-sm-row gap-3 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg px-5 fw-semibold">
+                                <i class="bi bi-check-circle me-2"></i> Create Entry
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-5">
+                                <i class="bi bi-arrow-left me-2"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Select2 + Bootstrap‑5 theme -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+
+
+
+    
+}

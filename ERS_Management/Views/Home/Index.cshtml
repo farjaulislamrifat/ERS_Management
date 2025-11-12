@@ -1,0 +1,23 @@
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+@{
+    ViewData["Title"] = "Index";
+}
+
+
+<div class="text-center mt-5">
+    <h1 class="display-4">Welcome to ERS Management</h1>
+
+@if (!User.Identity.IsAuthenticated)
+{
+        <div class="text-center mt-3">
+            <a asp-controller="Account" asp-action="Register" class="btn btn-success me-2">Register</a>
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary">Login</a>
+        </div>
+}
+else
+{
+
+
+}
+

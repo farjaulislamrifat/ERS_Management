@@ -1,0 +1,226 @@
+﻿@model ERS_Management.Models.FaultEntry
+@{
+    ViewData["Title"] = "Delete Fault Entry";
+    var isResolved = !string.IsNullOrEmpty(Model.ResolvedBy) && Model.ResolvedTime.HasValue;
+    var statusText = isResolved ? "Resolved" : "Open";
+    var statusClass = isResolved ? "bg-success" : "bg-warning text-dark";
+}
+
+<div class="container-fluid py-4 py-md-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+            <!-- ==================== DANGER CARD ==================== -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden border-danger">
+                <div class="card-header bg-danger text-white px-4 py-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="mb-0 fw-bold d-flex align-items-center">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> Delete Fault #@Model.No
+                        </h3>
+                        <small class="opacity-80">This action <strong>cannot be undone</strong></small>
+                    </div>
+                    <span class="badge @statusClass fs-6 px-3 py-2">
+                        <i class="bi @(isResolved ? "bi-check-circle" : "bi-hourglass-split") me-1"></i>
+                        @statusText
+                    </span>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <div class="alert alert-danger d-flex align-items-center gap-3 mb-5">
+                        <i class="bi bi-shield-fill-exclamation fs-3"></i>
+                        <div>
+                            <strong>Warning:</strong> You are about to <strong>permanently delete</strong> this fault record.<br />
+                            <small class="text-danger-emphasis">All associated data will be lost.</small>
+                        </div>
+                    </div>
+
+                    <!-- ==================== FAULT SUMMARY (Read-only) ==================== -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-danger bg-opacity-10 text-danger rounded-3 p-3">
+                                        <i class="bi bi-clock-history fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-semibold text-muted mb-1">Fault Time</h6>
+                                    <p class="mb-0 fs-5">@Model.FaultTime:yyyy-MM-dd HH:mm <small class="text-muted">(BDT)</small></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                                        <i class="bi bi-person-fill fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-semibold text-muted mb-1">Reported By</h6>
+                                    <p class="mb-0 fs-5">@Model.ReportedBy</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-info bg-opacity-10 text-info rounded-3 p-3">
+                                        <i class="bi bi-building fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-semibold text-muted mb-1">Site</h6>
+                                    <p class="mb-0 fs-5">@Model.Site</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-secondary bg-opacity-10 text-secondary rounded-3 p-3">
+                                        <i class="bi bi-geo-alt-fill fs-4"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-semibold text-muted mb-1">Location</h6>
+                                    <p class="mb-0 fs-5">@Model.Location</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-4">
+                            <h6 class="fw-semibold text-danger mb-2">
+                                <i class="bi bi-exclamation-circle-fill me-2"></i> Fault Description
+                            </h6>
+                            <div class="bg-light rounded-3 p-4 border-start border-danger border-3">
+                                <p class="mb-0 text-dark" style="white-space: pre-line;">@Model.Description</p>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(Model.Category))
+                        {
+                            <div class="col-12">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-dark bg-opacity-10 text-dark rounded-3 p-3">
+                                            <i class="bi bi-tags-fill fs-4"></i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-semibold text-muted mb-1">Category</h6>
+                                        <p class="mb-0 fs-5">@Model.Category</p>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- ==================== RESOLUTION SUMMARY (if exists) ==================== -->
+                    @if (isResolved)
+                    {
+                        <div class="border-start border-success border-4 ps-4 py-3 mb-4 bg-light-subtle rounded-3">
+                            <h6 class="fw-bold text-success mb-3">
+                                <i class="bi bi-check2-all me-2"></i> Resolution Recorded
+                            </h6>
+                            <div class="row g-3 small">
+                                <div class="col-md-4"><strong>Resolved By:</strong> @Model.ResolvedBy</div>
+                                <div class="col-md-4"><strong>Time:</strong> @Model.ResolvedTime:yyyy-MM-dd HH:mm</div>
+                                <div class="col-md-4"><strong>Duration:</strong> @Model.Duration</div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- ==================== REMARKS (if any) ==================== -->
+                    @if (!string.IsNullOrEmpty(Model.Remarks))
+                    {
+                        <div class="mt-4">
+                            <h6 class="fw-semibold text-muted mb-2">
+                                <i class="bi bi-chat-dots me-2"></i> Remarks
+                            </h6>
+                            <div class="bg-secondary bg-opacity-10 rounded-3 p-4">
+                                <p class="mb-0" style="white-space: pre-line;">@Model.Remarks</p>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- ==================== AUDIT INFO ==================== -->
+                    <div class="mt-5 pt-4 border-top text-muted small">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Logged By:</strong> @User.Identity?.Name
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <strong>Current Time (BDT):</strong> @DateTime.Now:yyyy-MM-dd HH:mm
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ==================== ACTION BUTTONS ==================== -->
+                <div class="card-footer bg-light border-0 px-4 py-4">
+                    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-between">
+                        <div>
+                            <!-- Delete Confirmation Modal Trigger -->
+                            <button type="button" class="btn btn-danger btn-lg px-5 fw-semibold" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                                <i class="bi bi-trash-fill me-2"></i> Delete Fault
+                            </button>
+                            <a asp-action="Details" asp-route-id="@Model.No" class="btn btn-outline-info btn-lg px-4">
+                                <i class="bi bi-eye me-2"></i> View Details
+                            </a>
+                        </div>
+                        <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-5">
+                            <i class="bi bi-arrow-left me-2"></i> Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== DELETE CONFIRM MODAL ==================== -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold" id="deleteConfirmLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body py-4">
+                <p class="mb-3">You are about to <strong>permanently delete</strong> this fault entry:</p>
+                <div class="bg-light rounded-3 p-3 mb-3 small">
+                    <strong>#@Model.No</strong> – @Model.Site, @Model.Location<br />
+                    <em>"@(Model.Description.Length > 80 ? Model.Description.Substring(0, 80) + "..." : Model.Description)"</em>
+                </div>
+                <p class="text-danger fw-semibold">This action <u>cannot be undone</u>.</p>
+            </div>
+            <div class="modal-footer">
+                <form asp-action="Delete" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="No" />
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="bi bi-trash-fill me-2"></i> Yes, Delete
+                    </button>
+                </form>
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Print Styles -->
+
+
+}

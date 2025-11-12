@@ -1,0 +1,260 @@
+﻿@model ERS_Management.Models.Entries
+@using ERS_Management.Models
+@{
+    ViewData["Title"] = "Delete Asset";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-9">
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i> Back to List
+                </a>
+                <h2 class="mb-0 fw-bold text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion
+                </h2>
+            </div>
+
+            <!-- Danger Card -->
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden border-danger">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="mb-0 d-flex align-items-center">
+                        <i class="bi bi-trash-fill me-2"></i>
+                        Delete Asset: @Model?.AssetNo
+                    </h5>
+                </div>
+                <div class="card-body p-5 bg-light">
+
+                    <div class="alert alert-warning border-start border-warning border-5 p-4 mb-4">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Warning:</strong> This action <strong>cannot be undone</strong>.
+                        The asset record will be permanently removed.
+                    </div>
+
+                    <!-- Details Grid -->
+                    <div class="row g-4">
+
+                        <!-- Area -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-geo-alt-fill text-primary fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Area</small>
+                                    <p class="mb-0 fw-medium">@Model?.Area</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-building text-info fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Location</small>
+                                    <p class="mb-0 fw-medium">@Model?.Location</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Brand -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-tag-fill text-success fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Brand</small>
+                                    <p class="mb-0 fw-medium">@Model?.Brand</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Model -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-box-seam text-warning fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Model</small>
+                                    <p class="mb-0 fw-medium">@Model?.Model</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Item Type -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-layers text-purple fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Item Type</small>
+                                    <p class="mb-0 fw-medium">@Model?.ItemType</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- User Purpose -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-check text-teal fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Purpose</small>
+                                    <p class="mb-0 fw-medium">@Model?.UserPurpose</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Asset No -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-hash text-muted fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Asset No</small>
+                                    <p class="mb-0 fw-medium font-monospace text-danger">@Model?.AssetNo</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Serial No -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-upc-scan text-danger fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Serial No</small>
+                                    <p class="mb-0 fw-medium font-monospace">@Model?.SerialNo</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quantity -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calculator text-indigo fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Quantity</small>
+                                    <p class="mb-0 fw-medium">@Model?.Quantity</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-toggle-on text-success fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Status</small>
+                                    <p class="mb-0">
+                                        <span class="badge rounded-pill px-3 py-2 fs-6
+                                            @(Model?.Status == ERS_Management.Models.Enums.EntryStatus.Running ? "bg-success" :
+                                                                                                                                                                                        Model?.Status == ERS_Management.Models.Enums.EntryStatus.Retired ? "bg-secondary" :
+                                                                                                                                                                                        Model?.Status == ERS_Management.Models.Enums.EntryStatus.Standby ? "bg-warning text-dark" :
+                                                                                                                                          "bg-danger")">
+                                            @Model?.Status
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Username -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-person-circle text-primary fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Last Updated By</small>
+                                    <p class="mb-0 fw-medium">@Model?.Username</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Created At -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar-plus text-secondary fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Created</small>
+                                    <p class="mb-0 fw-medium">
+                                        @Model?.CreatedAt.ToString("MMM dd, yyyy 'at' h:mm tt")
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Last Update -->
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-calendar-check text-secondary fs-4 me-3"></i>
+                                <div>
+                                    <small class="text-muted text-uppercase fw-semibold">Last Updated</small>
+                                    <p class="mb-0 fw-medium">
+                                        @Model?.LastUpdate
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Remarks -->
+                        <div class="col-12 mt-4">
+                            <div class="border-start border-4 border-danger ps-4">
+                                <small class="text-muted text-uppercase fw-semibold d-block mb-2">
+                                    <i class="bi bi-chat-dots-fill me-1"></i> Remarks
+                                </small>
+                                <p class="mb-0 fs-5">
+                                    @(string.IsNullOrWhiteSpace(Model?.Remarks) ?
+                                                                        "<em class='text-muted'>No remarks.</em>" :
+                                                                        Model.Remarks)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Form with Modal Trigger -->
+                    <form asp-action="Delete" method="post" class="mt-5">
+                        <input type="hidden" asp-for="SerialNumber" />
+                        <div class="d-grid d-md-flex gap-3 justify-content-md-end">
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+                                <i class="bi bi-x-circle me-2"></i> Cancel
+                            </a>
+                            <button type="button" class="btn btn-danger btn-lg rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                                <i class="bi bi-trash-fill me-2"></i> Delete Permanently
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteConfirmLabel">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">You are about to <strong>permanently delete</strong> this asset:</p>
+                <div class="bg-light p-3 rounded mb-3">
+                    <strong>@Model?.AssetNo</strong> — @Model?.Brand @Model?.Model
+                </div>
+                <p class="text-danger">
+                    <i class="bi bi-info-circle"></i> This action <strong>cannot be undone</strong>.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-arrow-left"></i> Cancel
+                </button>
+                <form asp-action="Delete" method="post" class="d-inline">
+                    <input type="hidden" asp-for="SerialNumber" />
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-check-circle"></i> Yes, Delete It
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

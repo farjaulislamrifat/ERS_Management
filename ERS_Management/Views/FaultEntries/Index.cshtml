@@ -1,0 +1,572 @@
+﻿@model IEnumerable<ERS_Management.Models.FaultEntry>
+@{
+    ViewData["Title"] = "Fault Entries";
+    var faults = Model.ToList();
+
+    // Unique values for dropdowns
+    var sites = faults.Select(f => f.Site).Where(s => s != null).Distinct().OrderBy(s => s).ToList();
+    var categories = faults.Select(f => f.Category).Where(c => c != null).Distinct().OrderBy(c => c).ToList();
+    var reporters = faults.Select(f => f.ReportedBy).Where(r => r != null).Distinct().OrderBy(r => r).ToList();
+    var locations = faults.Select(f => f.Location).Where(l => l != null).Distinct().OrderBy(l => l).ToList();
+
+    const int PageSize = 10;
+}
+
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 mb-0 text-dark fw-bold">Fault Entries</h2>
+        <a  asp-controller="FaultEntries" asp-action="Create" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-circle"></i> Create New
+        </a>
+    </div>
+
+    <!-- Global search + status filter -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="globalSearch" class="form-control border-start-0 ps-0"
+                               placeholder="Search all columns..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                    </select>
+                </div>
+                <div class="col-md-3 text-end">
+                    <small class="text-muted" id="totalCount">@faults.Count entries</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-2 mb-3">
+    <button id="exportExcel" class="btn btn-success btn-sm">
+        <i class="bi bi-file-earmark-excel me-1"></i>Export to Excel
+    </button>
+</div>
+    <!-- Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="faultsTable">
+                    <thead class="bg-light text-dark small text-uppercase">
+                        <tr>
+                            <th class="ps-4">No</th>
+                            <th>Fault Time</th>
+                            <th>Reported By</th>
+                            <th>Site</th>
+                            <th>Location</th>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <!-- FILTER ROW -->
+                    <thead class="bg-white border-bottom">
+                        <tr class="filter-row">
+                            <th class="ps-4"></th>
+                            <th></th>
+                            <th>
+                                <select class="form-select form-select-sm filter-select" data-col="reportedby">
+                                    <option value="">All</option>
+                                    @foreach (var r in reporters)
+                                    {
+                                        <option value="@r">@r</option>
+                                    }
+                                </select>
+                            </th>
+                            <th>
+                                <select class="form-select form-select-sm filter-select" data-col="site">
+                                    <option value="">All</option>
+                                    @foreach (var s in sites)
+                                    {
+                                        <option value="@s">@s</option>
+                                    }
+                                </select>
+                            </th>
+                            <th>
+                                <select class="form-select form-select-sm filter-select" data-col="location">
+                                    <option value="">All</option>
+                                    @foreach (var l in locations)
+                                    {
+                                        <option value="@l">@l</option>
+                                    }
+                                </select>
+                            </th>
+                            <th>
+                                <input type="text" class="form-control form-control-sm" placeholder="Desc…" data-col="description">
+                            </th>
+                            <th>
+                                <select class="form-select form-select-sm filter-select" data-col="category">
+                                    <option value="">All</option>
+                                    @foreach (var c in categories)
+                                    {
+                                        <option value="@c">@c</option>
+                                    }
+                                </select>
+                            </th>
+                            <th></th>
+                            <th>
+                                <input type="text" class="form-control form-control-sm" placeholder="h" data-col="duration">
+                            </th>
+                            <th class="text-end pe-4"></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tableBody" class="text-secondary">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINATION -->
+            <div class="card-footer bg-white border-top-0 py-3">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-between mb-0 w-100">
+                        <li class="page-item" id="prevBtn">
+                            <a class="page-link" href="#" tabindex="-1">Previous</a>
+                        </li>
+                        <div id="pageNumbers" class="d-flex"></div>
+                        <li class="page-item" id="nextBtn">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="text-center mt-2">
+                    <small class="text-muted">
+                        Showing <span id="showStart">0</span>–<span id="showEnd">0</span> of <span id="filteredCount">0</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@functions {
+    string GetStatus(FaultEntry item)
+    {
+        if (item.ResolvedTime.HasValue) return "Resolved";
+        if (!string.IsNullOrEmpty(item.Resolution)) return "In Progress";
+        return "Pending";
+    }
+}
+
+
+
+                    @section Scripts {
+    <script>
+        // Config
+        const PAGE_SIZE = @PageSize;
+        let currentPage = 1;
+        let filteredRows = [];
+        let pageData ; 
+        // DOM
+        const tableBody = document.getElementById('tableBody');
+        const globalInput = document.getElementById('globalSearch');
+        const statusSelect = document.getElementById('statusFilter');
+        const filterSelects = document.querySelectorAll('.filter-select');
+        const filterInputs = document.querySelectorAll('.filter-row input[data-col]');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const pageNumbers = document.getElementById('pageNumbers');
+        const showStart = document.getElementById('showStart');
+        const showEnd = document.getElementById('showEnd');
+        const filteredCount = document.getElementById('filteredCount');
+        const totalCount = document.getElementById('totalCount');
+
+        // All data (from Razor)
+        const allData = @Html.Raw(Json.Serialize(faults.Select(f => new {
+            No = f.No,
+            FaultTime = f.FaultTime?.ToString("dd MMM yyyy HH:mm"),
+            ReportedBy = f.ReportedBy,
+            Site = f.Site,
+            Location = f.Location,
+            Description = f.Description,
+            Category = f.Category,
+            Status = f.ResolvedTime.HasValue ? "Resolved" : (!string.IsNullOrEmpty(f.Resolution) ? "In Progress" : "Pending"),
+            Duration = f.Duration.HasValue ? $"{f.Duration.Value:F1} h" : "—",
+            BadgeClass = f.ResolvedTime.HasValue ? "bg-success" : (!string.IsNullOrEmpty(f.Resolution) ? "bg-warning text-dark" : "bg-secondary"),
+            Username = f.Username
+        })));
+
+
+// -------------------------------------------------------------------
+// Helper – convert ISO string from server (UTC) → BD time (UTC+6)
+// -------------------------------------------------------------------
+const toBD = (iso) => {
+    const d = new Date(iso);
+    const offset = 6 * 60;                         // +06:00 in minutes
+    const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+    return new Date(utc + offset * 60000);
+};
+
+// -------------------------------------------------------------------
+// Current user info (injected from Razor)
+// -------------------------------------------------------------------
+const currentUser   = "@User.Identity.Name".replace(/&quot;/g, '"');   // safe Razor value
+const isAdmin = @(User.IsInRole("Admin") ? "true" : "false");
+console.log(isAdmin)
+// -------------------------------------------------------------------
+// renderRow – returns a table <tr> string
+// -------------------------------------------------------------------
+const renderRow = (item) => {
+    // ----- BD times -------------------------------------------------
+    const faultBD   = toBD(item.faultTime);
+    const resolvedBD = item.resolvedTime ? toBD(item.resolvedTime) : null;
+
+    // ----- Permission logic -----------------------------------------
+    const canEdit   = currentUser === item.username;                 // creator only
+    const canDelete = isAdmin;                                       // admin only (change as needed)
+
+    // ----- Badge for status -----------------------------------------
+    const badge = item.status === "Resolved"
+        ? { cls: "bg-success", icon: "bi-check-circle-fill", txt: "Resolved" }
+        : { cls: "bg-warning text-dark", icon: "bi-hourglass-split", txt: "Open" };
+
+    // ----- Build the row --------------------------------------------
+    return `
+<tr class="fault-row align-middle" data-status="${item.status.toLowerCase()}">
+    <td class="ps-4 fw-semibold">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi ${badge.icon} text-${item.status === 'Resolved' ? 'success' : 'warning'}"></i>
+            #${item.no}
+        </div>
+    </td>
+
+    <td data-col="faulttime">
+        <small class="text-muted d-block">BDT</small>
+        ${faultBD.toLocaleDateString('en-GB')} ${faultBD.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})}
+    </td>
+
+    <td data-col="reportedBy" class="text-primary fw-medium">${item.reportedBy}</td>
+
+    <td data-col="site">
+        <span class="badge bg-light border text-dark px-3 py-2">${item.site}</span>
+    </td>
+
+    <td data-col="location">${item.location}</td>
+
+    <td data-col="description">
+        <div class="text-truncate" style="max-width:200px;" title="${item.description.replace(/"/g,'&quot;')}">
+            ${item.description}
+        </div>
+    </td>
+
+    <td data-col="category">
+        <span class="badge bg-info-subtle text-info-emphasis px-3 py-2">${item.category}</span>
+    </td>
+
+    <td>
+        <span class="badge ${badge.cls} px-3 py-2">
+            ${badge.txt}
+        </span>
+    </td>
+
+    <td data-col="duration" class="text-center">
+        ${item.duration ? `<span class="fw-medium">${item.duration}</span>` : `<span class="text-muted">—</span>`}
+    </td>
+
+    <td class="text-end pe-4">
+        <div class="btn-group btn-group-sm" role="group">
+
+            <!-- Details – always visible -->
+            <a href="/FaultEntries/Details/${item.no}"
+               class="btn btn-outline-primary" title="View Details">
+               Details
+            </a>
+
+            <!-- Edit – only for the creator -->
+            ${canEdit ? `
+            <a href="/FaultEntries/Edit/${item.no}"
+               class="btn btn-outline-secondary" title="Edit">
+              Edit
+            </a>` : ''}
+
+            <!-- Delete – only for admins -->
+            ${canDelete ? `
+            <a href="/FaultEntries/Delete/${item.no}"
+               class="btn btn-outline-danger" title="Delete">
+            Delete
+            </a>` : ''}
+
+         
+        </div>
+    </td>
+</tr>`;
+};
+        // Filter logic
+        const applyFilters = () => {
+            const globalTerm = globalInput.value.trim().toLowerCase();
+            const statusTerm = statusSelect.value;
+
+            console.log(globalInput);
+            console.log(statusTerm);
+
+            filteredRows = allData.filter(item => {
+                let match = true;
+
+                // Global search
+                if (globalTerm) {
+                    const text = Object.values(item).join(' ').toLowerCase();
+                    if (!text.includes(globalTerm)) match = false;
+                }
+
+                // Status
+                if (match && statusTerm && item.status !== statusTerm) match = false;
+
+       // Dropdowns
+if (match) {
+    filterSelects.forEach(sel => {
+        if (sel.value) {
+            var  col = sel.dataset.col; // e.g., "name"
+            col = col == "reportedby" ? "reportedBy" :  col ;
+            const cellVal = item[col]; // Access item.Name
+
+            // Optional: fallback if property doesn't exist
+            if (cellVal === undefined) {
+                console.warn(`Property ${prop} not found on item:`, item);
+                match = false;
+                return;
+            }
+
+            if (cellVal != sel.value) {
+                match = false;
+            }
+        }
+    });
+}
+
+// Text inputs
+if (match) {
+    filterInputs.forEach(inp => {
+        const term = inp.value.trim().toLowerCase();
+        if (!term) return;
+
+        const col = inp.dataset.col; // e.g., "name"
+      
+        const cellVal = (item[col] || '').toString().toLowerCase();
+
+        if (!cellVal.includes(term)) {
+            match = false;
+        }
+    });
+}
+
+                return match;
+            });
+
+            currentPage = 1;
+            renderPage();
+            renderPagination();
+        };
+
+        // Render current page
+        const renderPage = () => {
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const end = start + PAGE_SIZE;
+             pageData = filteredRows.slice(start, end);
+
+            tableBody.innerHTML = pageData.map(renderRow).join('');
+
+            // Update counters
+            showStart.textContent = filteredRows.length === 0 ? 0 : start + 1;
+            showEnd.textContent = Math.min(end, filteredRows.length);
+            filteredCount.textContent = filteredRows.length;
+        };
+
+        // Render pagination buttons
+        const renderPagination = () => {
+            const totalPages = Math.max(1, Math.ceil(filteredRows.length / PAGE_SIZE));
+            pageNumbers.innerHTML = '';
+
+            // Prev
+            prevBtn.classList.toggle('disabled', currentPage === 1);
+
+            // Page numbers
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            if (endPage - startPage + 1 < maxButtons) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = 'page-item';
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                if (i === currentPage) li.classList.add('active');
+                li.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    currentPage = i;
+                    renderPage();
+                    renderPagination();
+                });
+                pageNumbers.appendChild(li);
+            }
+
+            // Next
+            nextBtn.classList.toggle('disabled', currentPage === totalPages);
+        };
+
+        // Event listeners
+        globalInput.addEventListener('keyup', applyFilters);
+        statusSelect.addEventListener('change', applyFilters);
+        filterSelects.forEach(s => s.addEventListener('change', applyFilters));
+        filterInputs.forEach(i => i.addEventListener('keyup', applyFilters));
+
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (currentPage > 1) {
+                currentPage--;
+                renderPage();
+                renderPagination();
+            }
+        });
+
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderPage();
+                renderPagination();
+            }
+        });
+
+        // Initial render
+        applyFilters();
+
+
+
+
+
+
+
+
+
+/* ==============================================================
+   EXPORT TO EXCEL – FULLY STYLED (SheetJS 0.18.5)
+   ============================================================== */
+document.getElementById('exportExcel').addEventListener('click', () => {
+    exportToExcel(pageData);
+});
+
+function exportToExcel(data) {
+    // 1. Create workbook
+    const wb = XLSX.utils.book_new();
+
+    // 2. Build rows: [header] + [data]
+    const rows = [
+        [
+            'No',
+            'Fault Time',
+            'Reported By',
+            'Site',
+            'Location',
+            'Description',
+            'Category',
+            'Status',
+            'Duration'
+        ],
+        ...data.map(item => [
+            `#${item.no}`,
+            item.faultTime || '',
+            item.reportedBy || '',
+            item.site || '',
+            item.location || '',
+            item.description || '',
+            item.category || '',
+            item.status || '',
+            `${item.duration || ''}h`
+        ])
+    ];
+
+    // 3. Create worksheet from array
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+
+    // 4. Column widths
+    ws['!cols'] = [
+        { wch: 8 },   // No
+        { wch: 18 },  // Fault Time
+        { wch: 14 },  // Reported By
+        { wch: 12 },  // Site
+        { wch: 16 },  // Location
+        { wch: 30 },  // Description
+        { wch: 14 },  // Category
+        { wch: 12 },  // Status
+        { wch: 10 }   // Duration
+    ];
+
+    // 5. Style header row (row 0)
+    const headerRange = XLSX.utils.decode_range(ws['!ref']);
+    for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+        const cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+        const cell = ws[cellAddr];
+        if (!cell.s) cell.s = {};
+        cell.s = {
+            font: { bold: true, color: { rgb: 'FFFFFF' } },
+            fill: { fgColor: { rgb: '1A3C6D' } }, // dark blue
+            alignment: { horizontal: 'center', vertical: 'center' }
+        };
+    }
+
+    // 6. Add thin borders to EVERY cell
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = ws[cellAddr];
+            if (!cell.s) cell.s = {};
+            cell.s.border = {
+                top:    { style: 'thin', color: { rgb: 'D0D0D0' } },
+                bottom: { style: 'thin', color: { rgb: 'D0D0D0' } },
+                left:   { style: 'thin', color: { rgb: 'D0D0D0' } },
+                right:  { style: 'thin', color: { rgb: 'D0D0D0' } }
+            };
+        }
+    }
+
+    // 7. Freeze header + enable AutoFilter
+    ws['!autofilter'] = { ref: ws['!ref'] };
+    ws['!freeze'] = { ySplit: 1 };
+
+    // 8. Optional: Summary sheet
+    const summary = [
+        ['Fault Report Export'],
+        [''], 
+        ['Exported On', new Date().toLocaleString()],
+        ['Total Records', data.length],
+        [''], 
+        ['Generated by', 'Your Company']
+    ];
+    const wsSum = XLSX.utils.aoa_to_sheet(summary);
+    wsSum['!cols'] = [{ wch: 20 }, { wch: 30 }];
+    if (wsSum['A1']) wsSum['A1'].s = { font: { bold: true, sz: 16, color: { rgb: '1A3C6D' } } };
+    XLSX.utils.book_append_sheet(wb, wsSum, 'Summary');
+
+    // 9. Add main sheet
+    XLSX.utils.book_append_sheet(wb, ws, 'Faults');
+
+    // 10. Download file
+    const fileName = `Faults_Report_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
+
+
+
+
+    </script>
+}

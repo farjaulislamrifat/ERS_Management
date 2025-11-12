@@ -1,0 +1,94 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #0d6efd, #0b5ed7) !important;
+}
+
+/* Card & inputs */
+.card {
+    border-radius: 1rem;
+}
+
+.form-control, .form-select {
+    border-radius: .5rem;
+}
+
+/* Keep select + dropdown button on the same line */
+.input-group .select2-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.input-group .select2-selection {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    height: 100%;
+}
+
+.input-group .dropdown .btn {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    white-space: nowrap;
+}
+
+/* Dropdown menu – a bit wider on small screens */
+@media (max-width: 576px) {
+    .dropdown-menu {
+        min-width: 260px;
+    }
+}
+
+/* Hover lift */
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+
+/* wwwroot/css/site.css */
+.pagination .page-link {
+    color: #495057;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+#tableBody:empty::after {
+    content: "No records found";
+    display: block;
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
