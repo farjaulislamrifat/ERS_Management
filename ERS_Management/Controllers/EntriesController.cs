@@ -98,9 +98,6 @@ namespace ERS_Management.Controllers
             if (entry == null) return NotFound();
 
 
-
-
-
             return View(entry);
         }
 
