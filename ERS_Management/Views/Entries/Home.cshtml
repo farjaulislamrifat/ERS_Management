@@ -10,6 +10,7 @@
     var locations = entries.Select(e => e.Location).Where(l => l != null).Distinct().OrderBy(l => l).ToList();
     var brands = entries.Select(e => e.Brand).Where(b => b != null).Distinct().OrderBy(b => b).ToList();
     var itemTypes = entries.Select(e => e.ItemType).Where(it => it != null).Distinct().OrderBy(it => it).ToList();
+    var status = entries.Select(e => e.Status).Where(it => it != null).Distinct().OrderBy(it => it).ToList();
 
     const int PageSize = 10; // Items per page
 }
@@ -133,9 +134,7 @@
                         <th>
                             <select class="form-select form-select-sm" id="statusFilter">
                                 <option value="">All</option>
-                                <option>Running</option>
-                                <option>Damaged</option>
-                                <option>Standby</option>
+                                @foreach (var it in status) { <option>@it</option> }
                             </select>
                         </th>
                         <th></th>
@@ -191,6 +190,43 @@
         </div>
     </div>
 </div>
+
+
+
+
+
+
+
+<!-- ==================== LOG MODAL ==================== -->
+<div class="modal fade" id="logModal" tabindex="-1" aria-labelledby="logModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header bg-gradient-success text-white">
+                <h5 class="modal-title" id="logModalLabel">
+                    <i class="bi bi-journal-text me-2"></i> Entry Log
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="logTimeline" class="p-3"></div>
+                <div id="logEmpty" class="text-center text-muted py-4 d-none">
+                    <i class="bi bi-inbox fs-1"></i><br>No log entries.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -298,9 +334,14 @@
     <td><span class="badge ${getStatusBadge(item.status)} px-2">${item.status}</span></td>
     <td class="text-end pe-3">
         <div class="btn-group btn-group-sm">
-            <a href="/Entries/Details/${item.serialNumber}" class="btn btn-outline-primary">View</a>
-            ${item.username === currentUser ? `<a href="/Entries/Edit/${item.serialNumber}" class="btn btn-outline-secondary">Edit</a>` : ''}
-            ${isAdmin ? `<a href="/Entries/Delete/${item.serialNumber}" class="btn btn-outline-danger" onclick="return confirm('Delete?')">Del</a>` : ''}
+            <a href="/Entries/Details/${item.serialNumber}" class="btn btn-primary">View</a>
+          <button type="button" class="btn btn-danger btn-sm" 
+        data-bs-toggle="modal" data-bs-target="#logModal"
+        data-sn="${item.serialNumber}">
+ Logs
+</button>
+            ${item.username === currentUser ? `<a href="/Entries/Edit/${item.serialNumber}" class="btn btn-secondary">Edit</a>` : ''}
+            ${isAdmin ? `<a href="/Entries/Delete/${item.serialNumber}" class="btn btn-danger" onclick="return confirm('Delete?')">Del</a>` : ''}
         </div>
     </td>
 </tr>`;
@@ -559,9 +600,116 @@
             applyFilters();
         };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        const logModalEl = document.getElementById('logModal');
+const logTimeline = $('#logTimeline');
+const logEmpty    = $('#logEmpty');
+
+logModalEl.addEventListener('show.bs.modal', async function (e) {
+    const btn = e.relatedTarget;                 // the button that triggered
+    const sn  = btn.dataset.sn;                  // serial number
+
+    // reset UI
+    logTimeline.innerHTML = '';
+    logEmpty.classList.add('d-none');
+
+    // show spinner
+    logTimeline.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+
+    try {
+        const resp = await fetch(`/Entries/GetLog?sn=${encodeURIComponent(sn)}`);
+        if (!resp.ok) throw new Error('Not found');
+        const logs = await resp.json();          // expected: [{time, user, action, details}, …]
+
+        if (!logs || logs.length === 0) {
+            logEmpty.classList.remove('d-none');
+            logTimeline.innerHTML = '';
+            return;
+        }
+
+        // ---- render timeline ----
+        const container = document.createElement('div');
+        container.className = 'timeline';
+
+        logs.forEach((log, idx) => {
+            const badgeClass = idx === 0 ? 'bg-success' : 'bg-primary';
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.innerHTML = `
+                <div class="d-flex">
+                    <div class="timeline-badge ${badgeClass} rounded-circle d-flex align-items-center justify-content-center me-3">
+                        ${idx + 1}
+                    </div>
+                    <div class="flex-grow-1 bg-light rounded-3 p-3 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-primary">${log.action}</strong>
+                            <small class="text-muted">${log.time}</small>
+                        </div>
+                        <div class="text-dark"><strong>User:</strong> ${log.user}</div>
+                      
+                    </div>
+                </div>`;
+            container.appendChild(item);
+        });
+
+        logTimeline.innerHTML = '';
+        logTimeline.appendChild(container);
+
+    } catch (err) {
+        logTimeline.innerHTML = `<div class="text-danger text-center py-3">Failed to load log.</div>`;
+        console.error(err);
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         // ========================================
         // INITIALIZE
         // ========================================
         setTimeout(applyFilters, 50);
     </script>
+
+
+
+    <style>
+        #logTimeline .timeline { position:relative; padding-left:2rem; }
+#logTimeline .timeline::before{
+    content:''; position:absolute; left:18px; top:0; bottom:0;
+    width:2px; background:#dee2e6;
+}
+#logTimeline .timeline-item { position:relative; margin-bottom:1rem; }
+#logTimeline .timeline-badge{
+    position:absolute; left:-38px; top:0; z-index:1;
+    width:36px; height:36px; display:flex;
+    align-items:center; justify-content:center;
+    font-size:.9rem; color:#fff; border-radius:50%;
+}
+    </style>
+
+
+
 }

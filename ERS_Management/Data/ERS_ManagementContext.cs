@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ERS_Management.Models;
 
 namespace ERS_Management.Data
 {
@@ -13,6 +12,8 @@ namespace ERS_Management.Data
         public DbSet<ERS_Management.Models.Account> Account { get; set; } = default!;
         public DbSet<ERS_Management.Models.Entries> Entries { get; set; } = default!;
         public DbSet<ERS_Management.Models.FaultEntry> FaultEntry { get; set; } = default!;
+        public DbSet<ERS_Management.Models.FaultLog> FaultLog { get; set; } = default!;
+        public DbSet<ERS_Management.Models.EntryLog> EntryLog { get; set; } = default!;
 
     }
 }

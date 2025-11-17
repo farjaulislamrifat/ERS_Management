@@ -16,4 +16,12 @@ namespace ERS_Management.Models.Enums
         [Display(Name = "Retired")]
         Retired = 3
     }
+
+    public enum LogAction
+    {
+        Created,
+        Updated,
+        Deleted
+    }
+
 }

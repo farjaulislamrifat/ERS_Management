@@ -8,6 +8,7 @@
     var categories = faults.Select(f => f.Category).Where(c => c != null).Distinct().OrderBy(c => c).ToList();
     var reporters = faults.Select(f => f.ReportedBy).Where(r => r != null).Distinct().OrderBy(r => r).ToList();
     var locations = faults.Select(f => f.Location).Where(l => l != null).Distinct().OrderBy(l => l).ToList();
+    var resolvedBy = faults.Select(f => f.ResolvedBy).Where(l => l != null).Distinct().OrderBy(l => l).ToList();
 
     const int PageSize = 10;
 }
@@ -101,8 +102,7 @@
     </div>
 </div>
 
-            <!-- Counter + Clear Button (Right-aligned) -->
-           
+         
           
         </div>
     </div>
@@ -115,16 +115,18 @@
                 <table class="table table-hover align-middle mb-0" id="faultsTable">
                     <thead class="bg-light text-dark small text-uppercase sticky-top">
                         <tr>
-                            <th class="ps-4">No</th>
-                            <th>Fault Time</th>
-                            <th>Reported By</th>
-                            <th>Site</th>
-                            <th>Location</th>
-                            <th>Description</th>
-                            <th>Category</th>
-                            <th>Status</th>
-                            <th>Duration</th>
-                            <th class="text-end pe-4">Actions</th>
+                          <th class="ps-4">No</th>
+                    <th>Fault Time (BDT)</th>
+                    <th>Reported By</th>
+                    <th>Site</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Resolution</th>
+                    <th>Resolved By</th>
+                    <th>Remarks</th>
+                    <th class="text-center">Duration</th>
+                    <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
 
@@ -174,14 +176,20 @@
                             </th>
                             <th>
 
+                                <input type="text" class="form-control form-control-sm" placeholder="Resolution" data-col="resolution">
  
-                    <select class="form-select form-select-sm" id="statusFilter" aria-label="Status filter">
-                        <option value="">All Status</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Pending">Pending</option>
-                    </select>
+                 
                             </th>
+                            <th>
+                                 <select class="form-select form-select-sm filter-select" data-col="resolvedBy">
+                                    <option value="">All</option>
+                                    @foreach (var c in  resolvedBy)
+                                    {
+                                        <option value="@c">@c</option>
+                                    }
+                                </select>
+                            </th>
+                            <th></th>
                             <th>
                                 <input type="text" class="form-control form-control-sm" placeholder="h" data-col="duration">
                             </th>
@@ -295,7 +303,31 @@
 
 
 
-
+<!-- ====================== LOGS MODAL ====================== -->
+<div class="modal fade" id="logsModal" tabindex="-1" aria-labelledby="logsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-lg">
+            <div class="modal-header bg-gradient-info text-white">
+                <h5 class="modal-title" id="logsModalLabel">
+                    <i class="bi bi-journal-text me-2"></i> Fault #<span id="logFaultNo"></span> – Activity Log
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" id="logsBody">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-info" role="status">
+                        <span class="visually-hidden">Loading logs...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -310,7 +342,7 @@
         tableBody: document.getElementById('tableBody'),
         loadingRow: document.getElementById('loadingRow'),
         globalSearch: document.getElementById('globalSearch'),
-        statusFilter: document.getElementById('statusFilter'),
+   
         fromDate: document.getElementById('fromDate'),
         toDate: document.getElementById('toDate'),
         filterSelects: document.querySelectorAll('.filter-select'),
@@ -355,12 +387,12 @@ const allData = @Html.Raw(Json.Serialize(faults.Select(f => new {
         location = f.Location ?? "",
         description = f.Description ?? "",
         category = f.Category ?? "",
-        duration = f.Duration,
-        status = f.ResolvedTime.HasValue ? "Resolved" :
-                !string.IsNullOrEmpty(f.Resolution) ? "In Progress" : "Pending",
-                resolvedBy = f.ResolvedBy,
+                resolution = f.Resolution,
+           resolvedBy = f.ResolvedBy,
                 remarks = f.Remarks,
-                resolution = f.Resolution
+        duration = f.Duration,
+             
+                username = f.Username
     })));
 
     console.log(allData);
@@ -378,55 +410,65 @@ const allData = @Html.Raw(Json.Serialize(faults.Select(f => new {
     };
 
 
-    const getStatusConfig = (status) => {
-        return status === "Resolved"
-            ? { cls: "bg-success", icon: "bi-check-circle-fill", txt: "Resolved" }
-            : status === "In Progress"
-            ? { cls: "bg-warning text-dark", icon: "bi-hourglass-split", txt: "In Progress" }
-            : { cls: "bg-secondary", icon: "bi-exclamation-circle", txt: "Pending" };
-    };
+    const getDuration = item => {
+    if (item.duration != null) return item.duration;
+    if (!item.faultTime || !item.resolvedTime) return null;
+    return (new Date(item.resolvedTime) - new Date(item.faultTime)) / (1000 * 60 * 60);
+};
 
-    const renderRow = (item) => {
-        const canEdit = currentUser === item.username;
-        const canDelete = isAdmin;
-        const status = getStatusConfig(item.status);
 
-        return `
-<tr class="fault-row" data-status="${item.status}">
-    <td class="ps-4 fw-semibold">
-        <div class="d-flex align-items-center gap-2">
-            <i class="bi ${status.icon} text-${status.cls.includes('success') ? 'success' : status.cls.includes('warning') ? 'warning' : 'secondary'}"></i>
-            #${item.no}
-        </div>
-    </td>
+const renderRow = item => {
+    const dur = getDuration(item);
+    const descEsc = item.description.replace(/"/g, '&quot;');
+    
+    const canEdit = item.username == currentUser ? true : false;
+    const canDelete =isAdmin ;
+
+
+    return `
+<tr class="fault-row">
+    <td class="ps-4 fw-semibold">#${item.no}</td>
     <td><small class="text-muted d-block">BDT</small>${formatBDT(item.faultTime)}</td>
     <td class="text-primary fw-medium">${item.reportedBy}</td>
     <td><span class="badge bg-light border text-dark px-3 py-2">${item.site}</span></td>
     <td>${item.location}</td>
     <td>
-        <div class="text-truncate" style="max-width:200px;" title="${item.description.replace(/"/g,'&quot;')}">
+        <div class="text-truncate" style="max-width:200px;" title="${descEsc}">
             ${item.description}
         </div>
     </td>
     <td><span class="badge bg-info-subtle text-info-emphasis px-3 py-2">${item.category}</span></td>
-    <td><span class="badge ${status.cls} px-3 py-2">${status.txt}</span></td>
+    <td class="text-truncate" style="max-width:180px;" title="${item.resolution.replace(/"/g,'&quot;')}">
+        ${item.resolution || '<span class="text-muted">—</span>'}
+    </td>
+    <td>${item.resolvedBy || '<span class="text-muted">—</span>'}</td>
+    <td class="text-truncate" style="max-width:180px;" title="${item.remarks.replace(/"/g,'&quot;')}">
+        ${item.remarks || '<span class="text-muted">—</span>'}
+    </td>
     <td class="text-center">
-        ${item.duration ? `<span class="fw-medium">${item.duration.toFixed(1)} h</span>` : `<span class="text-muted">—</span>`}
+        ${dur !== null
+            ? `<span class="fw-medium">${dur.toFixed(1)} h</span>`
+            : `<span class="text-muted">—</span>`
+        }
     </td>
     <td class="text-end pe-4">
         <div class="btn-group btn-group-sm" role="group">
             <a href="/FaultEntries/Details/${item.no}" class="btn btn-outline-primary" title="View Details">Details</a>
-            ${canEdit ? `<a href="/FaultEntries/Edit/${item.no}" class="btn btn-outline-secondary" title="Edit">Edit</a>` : ''}
-            ${canDelete ? `<a href="/FaultEntries/Delete/${item.no}" class="btn btn-outline-danger" title="Delete">Delete</a>` : ''}
+            <button type="button" class="btn btn-outline-info" 
+                data-bs-toggle="modal" data-bs-target="#logsModal"
+                data-no="${item.no}" onclick="openLogsModal(${item.no})">
+              Logs
+        </button>
+            ${canEdit   ? `<a href="/FaultEntries/Edit/${item.no}"   class="btn btn-outline-secondary" title="Edit">Edit</a>`   : ''}
+            ${canDelete ? `<a href="/FaultEntries/Delete/${item.no}" class="btn btn-outline-danger"    title="Delete">Delete</a>` : ''}
         </div>
     </td>
 </tr>`;
-    };
-
+};
     // ============================= FILTERING =============================
     const applyFilters = () => {
         const global = els.globalSearch.value.trim().toLowerCase();
-        const status = els.statusFilter.value;
+     
         const from = els.fromDate.value ? new Date(els.fromDate.value) : null;
         const to = els.toDate.value ? new Date(els.toDate.value) : null;
 
@@ -437,9 +479,7 @@ const allData = @Html.Raw(Json.Serialize(faults.Select(f => new {
                 if (!text.includes(global)) return false;
             }
 
-            // Status
-            if (status && item.status !== status) return false;
-
+         
             // Date range
             const faultDate = toBDT(item.faultTime);
             if (from && faultDate < from) return false;
@@ -752,10 +792,86 @@ async function generateFaultReportExcel(selectedData, fullData, filename = "ITS_
 
 
 
+// ============================= LOGS MODAL =============================
+const logsModalEl = document.getElementById('logsModal');
+const logFaultNo = document.getElementById('logFaultNo');
+const logsBody = document.getElementById('logsBody');
 
+let logsModal;
 
+document.addEventListener('DOMContentLoaded', () => {
+    logsModal = new bootstrap.Modal(logsModalEl);
+});
 
+async function openLogsModal(faultNo) {
+    logFaultNo.textContent = faultNo;
+    logsBody.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden">Loading logs...</span>
+            </div>
+        </div>`;
 
+    logsModal.show();
+
+    try {
+        const resp = await fetch(`/FaultEntries/GetLog?no=${encodeURIComponent(faultNo)}`);
+        if (!resp.ok) throw new Error('Failed to load logs');
+
+        const logs = await resp.json();
+
+        if (!logs || logs.length === 0) {
+            logsBody.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-1"></i><br>
+                    <small>No activity logs found.</small>
+                </div>`;
+            return;
+        }
+
+        // Render timeline
+        const timeline = document.createElement('div');
+        timeline.className = 'timeline p-3';
+
+        logs.forEach((log, idx) => {
+            const badgeClass = idx === 0 ? 'bg-success' : 'bg-primary';
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.innerHTML = `
+                <div class="d-flex">
+                    <div class="timeline-badge ${badgeClass} rounded-circle d-flex align-items-center justify-content-center me-3">
+                        ${idx + 1}
+                    </div>
+                    <div class="flex-grow-1 bg-light rounded-3 p-3 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-primary">${escapeHtml(log.action)}</strong>
+                            <small class="text-muted">${log.time}</small>
+                        </div>
+                        <div class="text-dark"><strong>User:</strong> ${escapeHtml(log.user)}</div>
+                     
+                    </div>
+                </div>`;
+            timeline.appendChild(item);
+        });
+
+        logsBody.innerHTML = '';
+        logsBody.appendChild(timeline);
+
+    } catch (err) {
+        logsBody.innerHTML = `
+            <div class="text-danger text-center py-4">
+                <i class="bi bi-exclamation-triangle"></i><br>
+                Failed to load logs.
+            </div>`;
+        console.error(err);
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 
 
@@ -770,7 +886,7 @@ async function generateFaultReportExcel(selectedData, fullData, filename = "ITS_
 
     // ============================= EVENT LISTENERS =============================
     els.globalSearch.addEventListener('input', debounceFilter);
-    els.statusFilter.addEventListener('change', applyFilters);
+
     els.fromDate.addEventListener('change', applyFilters);
     els.toDate.addEventListener('change', applyFilters);
     els.filterSelects.forEach(s => s.addEventListener('change', applyFilters));
@@ -807,4 +923,45 @@ async function generateFaultReportExcel(selectedData, fullData, filename = "ITS_
         els.loadingRow.style.display = 'none';
     }, 100);
 </script>
+
+
+<style>
+    #logsBody .timeline {
+    position: relative;
+    padding-left: 2.5rem;
+}
+#logsBody .timeline::before {
+    content: '';
+    position: absolute;
+    left: 18px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #dee2e6;
+}
+#logsBody .timeline-item {
+    position: relative;
+    margin-bottom: 1.25rem;
+}
+#logsBody .timeline-badge {
+    position: absolute;
+    left: -38px;
+    top: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: white;
+    z-index: 1;
+}
+</style>
+
+
+
+
+
+
 }

@@ -1,6 +1,6 @@
 ﻿using ERS_Management.Data;
 using ERS_Management.Models;
-using ERS_Management.PaginatedList;
+using ERS_Management.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +17,7 @@ namespace ERS_Management.Controllers
         }
 
         // GET: Entries
-        public async Task<IActionResult> Index(string searchString, string sortOrder, int? pageNumber)
+        public async Task<IActionResult> Home(string searchString, string sortOrder, int? pageNumber)
         {
             ViewData["CurrentFilter"] = searchString;
             ViewData["AreaSortParm"] = sortOrder == "area" ? "area_desc" : "area";
@@ -46,10 +46,8 @@ namespace ERS_Management.Controllers
                 _ => entries.OrderBy(e => e.SerialNumber),
             };
 
-            // ----- PAGING -----
-            int pageSize = 10;
-            var paged = await PaginatedList<Entries>.CreateAsync(entries.AsNoTracking(), pageNumber ?? 1, pageSize);
-            return View(paged);
+
+            return View(entries);
         }
 
         // GET: Entries/Create
@@ -57,28 +55,45 @@ namespace ERS_Management.Controllers
         {
             LoadDropdowns();
 
-
-
-
             return View();
         }
 
         // POST: Entries/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind(
-            "Area,Location,Brand,Model,ItemType,UserPurpose,AssetNo,SerialNo,Quantity,Status,Remarks,Username")] Entries entry)
+        public async Task<IActionResult> Create(
+    [Bind("Area,Location,Brand,Model,ItemType,UserPurpose,AssetNo,SerialNo,Quantity,Status,Remarks,Username")]
+    Entries entry)
         {
-
-            if (ModelState.IsValid)
+            // ---------- 1. Validate ----------
+            if (!ModelState.IsValid)
             {
-                entry.CreatedAt = DateTime.UtcNow;
-
-                _context.Add(entry);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                // Repopulate any dropdowns you may have (e.g. Status)
+                ViewData["Status"] = new SelectList(Enum.GetValues(typeof(EntryStatus)));
+                return View(entry);
             }
-            return View(entry);
+
+            // ---------- 2. Set audit fields ----------
+            entry.CreatedAt = DateTime.UtcNow;
+
+            // ---------- 3. Persist the entry ----------
+            _context.Entries.Add(entry);
+            int count = await _context.SaveChangesAsync();   // <-- SerialNumber (PK) is now filled by DB
+
+            // ---------- 4. Create log ----------
+            var log = new EntryLog
+            {
+                EnteredBy = User.Identity.Name,
+                EntryTime = entry.CreatedAt,
+                logAction = LogAction.Created,
+                // Use the **generated PK**, not the user-supplied SerialNo
+                FaultId = entry.SerialNumber
+            };
+
+            _context.EntryLog.Add(log);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Home));
         }
         private void LoadDropdowns()
         {
@@ -101,6 +116,35 @@ namespace ERS_Management.Controllers
             return View(entry);
         }
 
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetLog(string sn)
+        {
+            if (string.IsNullOrWhiteSpace(sn))
+                return Json(new object[0]);
+
+            var logs = await _context.EntryLog
+                .Where(l => l.FaultId == Convert.ToInt32(sn))
+                .OrderBy(l => l.EntryTime)
+                .Select(l => new
+                {
+                    time = l.EntryTime.ToString("yyyy-MM-dd HH:mm:ss"), // BDT
+                    user = l.EnteredBy ?? "system",
+                    action = l.logAction == LogAction.Created ? "Created" : l.logAction == LogAction.Updated ? "Updated" : "Deleted",
+
+                })
+                .ToListAsync();
+
+            return Json(logs);
+        }
+
+
+
+
+
+
         // POST: Entries/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -116,13 +160,28 @@ namespace ERS_Management.Controllers
                     entry.LastUpdate = DateTime.UtcNow;
                     _context.Update(entry);
                     await _context.SaveChangesAsync();
+
+
+                    var log = new EntryLog
+                    {
+                        EnteredBy = User.Identity.Name,
+                        EntryTime = DateTime.UtcNow,
+                        logAction = LogAction.Updated,
+                        // Use the **generated PK**, not the user-supplied SerialNo
+                        FaultId = entry.SerialNumber
+                    };
+
+                    _context.EntryLog.Add(log);
+                    await _context.SaveChangesAsync();
+
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!EntryExists(entry.SerialNumber)) return NotFound();
                     throw;
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Home));
             }
             return View(entry);
         }
@@ -191,8 +250,21 @@ namespace ERS_Management.Controllers
             {
                 _context.Entries.Remove(entry);
                 await _context.SaveChangesAsync();
+
+
+                var log = new EntryLog
+                {
+                    EnteredBy = User.Identity.Name,
+                    EntryTime = DateTime.UtcNow,
+                    logAction = LogAction.Deleted,
+                    // Use the **generated PK**, not the user-supplied SerialNo
+                    FaultId = entry.SerialNumber
+                };
+
+                _context.EntryLog.Add(log);
+                await _context.SaveChangesAsync();
             }
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Home));
         }
 
         private bool EntryExists(int id) => _context.Entries.Any(e => e.SerialNumber == id);

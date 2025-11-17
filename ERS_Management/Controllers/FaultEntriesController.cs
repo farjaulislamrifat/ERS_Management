@@ -1,5 +1,6 @@
 ﻿using ERS_Management.Data;
 using ERS_Management.Models;
+using ERS_Management.Models.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +17,10 @@ namespace ERS_Management.Controllers
         }
 
         // GET: FaultEntries
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Home()
         {
             return View(await _context.FaultEntry.ToListAsync());
         }
-
 
 
         public void LoadDropdowns()
@@ -58,6 +58,28 @@ namespace ERS_Management.Controllers
             return View();
         }
 
+
+
+        [HttpGet]
+        public async Task<IActionResult> GetLog(int no)
+        {
+            if (no <= 0) return Json(new object[0]);
+
+            var logs = await _context.FaultLog
+                .Where(l => l.FaultId == no)
+                .OrderBy(l => l.EntryTime)
+                .Select(l => new
+                {
+                    time = l.EntryTime.ToString("yyyy-MM-dd HH:mm:ss"), // BDT
+                    user = l.EnteredBy ?? "system",
+                    action = l.logAction == LogAction.Created ? "Created" : l.logAction == LogAction.Updated ? "Updated" : "Deleted",
+
+                })
+                .ToListAsync();
+
+            return Json(logs);
+        }
+
         // POST: FaultEntries/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -70,7 +92,24 @@ namespace ERS_Management.Controllers
                 faultEntry.Username = User.Identity.Name;
                 _context.Add(faultEntry);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+
+
+
+                var log = new FaultLog
+                {
+                    EnteredBy = User.Identity.Name,
+                    EntryTime = DateTime.UtcNow,
+                    logAction = LogAction.Created,
+                    // Use the **generated PK**, not the user-supplied SerialNo
+                    FaultId = faultEntry.No
+                };
+
+                _context.FaultLog.Add(log);
+                await _context.SaveChangesAsync();
+
+
+
+                return RedirectToAction(nameof(Home));
             }
             return View(faultEntry);
         }
@@ -115,8 +154,26 @@ namespace ERS_Management.Controllers
             {
                 try
                 {
+
+
+                    faultEntry.Username = User.Identity.Name;
+
                     _context.Update(faultEntry);
                     await _context.SaveChangesAsync();
+
+
+                    var log = new FaultLog
+                    {
+                        EnteredBy = User.Identity.Name,
+                        EntryTime = DateTime.UtcNow,
+                        logAction = LogAction.Updated,
+                        // Use the **generated PK**, not the user-supplied SerialNo
+                        FaultId = faultEntry.No
+                    };
+
+                    _context.FaultLog.Add(log);
+                    await _context.SaveChangesAsync();
+
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -129,7 +186,7 @@ namespace ERS_Management.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Home));
             }
             return View(faultEntry);
         }
@@ -164,7 +221,22 @@ namespace ERS_Management.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+
+            var log = new FaultLog
+            {
+                EnteredBy = User.Identity.Name,
+                EntryTime = DateTime.UtcNow,
+                logAction = LogAction.Deleted,
+                // Use the **generated PK**, not the user-supplied SerialNo
+                FaultId = faultEntry.No
+            };
+
+            _context.FaultLog.Add(log);
+            await _context.SaveChangesAsync();
+
+
+            return RedirectToAction(nameof(Home));
         }
 
         private bool FaultEntryExists(int id)

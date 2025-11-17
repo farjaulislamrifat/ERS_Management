@@ -276,7 +276,7 @@
                         <!-- Actions -->
                         <div class="d-flex gap-2 mt-3">
                             <button type="submit" class="btn btn-save flex-fill">Create Fault Entry  (Enter)</button>
-                            <a asp-action="Index" class="btn btn-back flex-fill">Back (Esc)</a>
+                            <a asp-action="Home" class="btn btn-back flex-fill">Back (Esc)</a>
                         </div>
                     </form>
                 </div>
@@ -353,7 +353,7 @@
                     $('#createFaultForm').submit();
                 }
                 if (e.key === 'Escape') {
-                    window.location = '@Url.Action("Index")';
+                    window.location = '@Url.Action("Home")';
                 }
             });
 
